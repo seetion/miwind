@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MIWIND·米风电器【开发中】</title>
+<style>
+  :root{
+    --bg0:#040b17;
+    --bg1:#0a1428;
+    --panel:linear-gradient(160deg,rgba(17,36,68,.92),rgba(8,18,40,.96));
+    --panel-solid:#0c1d3a;
+    --border:rgba(96,168,255,.16);
+    --text:#e8f2ff;
+    --text-dim:#8196ba;
+    --text-weak:#5b7199;
+    --cyan:#22d3ee;
+    --accent:#38bdf8;
+    --green:#34d399;
+    --yellow:#fbbf24;
+    --blue:#60a5fa;
+    --red:#f87171;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    background:var(--bg0);
+    color:var(--text);
+    font-size:14px;
+    overflow:hidden;
+  }
+  /* 背景网格 */
+  body::before{
+    content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(rgba(56,189,248,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(56,189,248,.045) 1px,transparent 1px);
+    background-size:38px 38px;
+  }
+  body::after{
+    content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(1100px 520px at 18% -8%,rgba(34,211,238,.10),transparent 60%),
+               radial-gradient(900px 480px at 90% 108%,rgba(56,189,248,.08),transparent 60%);
+  }
+  .num{font-family:"Bahnschrift","DIN Alternate","Arial Narrow",sans-serif;letter-spacing:.5px}
+
+  /* ===== 头部 ===== */
+  header{
+    position:relative;z-index:2;height:66px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;background:linear-gradient(180deg,rgba(14,32,62,.95),rgba(7,16,34,.92));
+    border-bottom:1px solid var(--border);
+    box-shadow:0 6px 24px rgba(2,8,20,.5);
+  }
+  header::after{
+    content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent) 18%,var(--cyan) 50%,var(--accent) 82%,transparent);
+    opacity:.7;
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand-logo{
+    width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(145deg,#0e3a5c,#0a2238);border:1px solid rgba(56,189,248,.45);
+    box-shadow:0 0 16px rgba(34,211,238,.25),inset 0 0 12px rgba(34,211,238,.12);
+    font-size:21px;color:var(--cyan);
+  }
+  .brand h1{font-size:21px;font-weight:700;letter-spacing:2px}
+  .brand h1 span{color:var(--cyan)}
+  .brand .sub{font-size:12px;color:var(--text-dim);letter-spacing:1px;margin-top:2px}
+  .head-right{display:flex;align-items:center;gap:26px}
+  .shift-box{display:flex;flex-direction:column;align-items:flex-end;gap:5px;min-width:170px}
+  .shift-row{display:flex;align-items:center;gap:8px}
+  .shift-tag{
+    font-size:12px;padding:2px 10px;border-radius:20px;border:1px solid rgba(251,191,36,.5);
+    color:var(--yellow);background:rgba(251,191,36,.08);letter-spacing:1px;
+  }
+  .shift-bar{width:170px;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
+  .shift-bar i{display:block;height:100%;width:53%;border-radius:3px;
+    background:linear-gradient(90deg,#22d3ee,#34d399)}
+  .shift-time{font-size:11px;color:var(--text-dim)}
+  .clock{text-align:right}
+  .clock .time{font-size:26px;font-weight:700;color:#dff3ff;line-height:1;
+    text-shadow:0 0 18px rgba(56,189,248,.35)}
+  .clock .date{font-size:12px;color:var(--text-dim);margin-top:5px;letter-spacing:1px}
+
+  /* ===== 布局 ===== */
+  main{position:relative;z-index:1;display:flex;gap:14px;padding:14px 14px 10px;height:calc(100vh - 66px - 72px)}
+  .panel{
+    position:relative;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    box-shadow:0 10px 30px rgba(2,8,20,.45);overflow:hidden;
+  }
+  .panel::before{
+    content:'';position:absolute;top:-1px;left:-1px;width:15px;height:15px;pointer-events:none;
+    border-top:2px solid var(--accent);border-left:2px solid var(--accent);
+    border-top-left-radius:11px;opacity:.8;
+  }
+  .panel::after{
+    content:'';position:absolute;bottom:-1px;right:-1px;width:15px;height:15px;pointer-events:none;
+    border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);
+    border-bottom-right-radius:11px;opacity:.8;
+  }
+  .panel-title{
+    display:flex;align-items:center;gap:9px;padding:14px 16px 11px;
+    font-size:15px;font-weight:600;letter-spacing:1.5px;
+  }
+  .panel-title .icon{color:var(--cyan);font-size:16px}
+  .panel-title .en{font-size:10px;color:var(--text-weak);letter-spacing:2px;font-weight:400}
+  .panel-title::after{content:'';position:absolute;left:16px;right:16px;top:43px;height:1px;
+    background:linear-gradient(90deg,rgba(56,189,248,.35),transparent)}
+
+  /* ===== 左侧 ===== */
+  .left-panel{width:266px;flex-shrink:0;display:flex;flex-direction:column}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;padding:2px 16px 12px}
+  .legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim)}
+  .line-list{flex:1;overflow-y:auto;padding:2px 12px 12px;display:flex;flex-direction:column;gap:10px}
+  .line-list::-webkit-scrollbar{width:5px}
+  .line-list::-webkit-scrollbar-thumb{background:rgba(56,189,248,.25);border-radius:3px}
+  .line-card{
+    text-align:left;cursor:pointer;color:var(--text);font-family:inherit;
+    border:1px solid rgba(96,168,255,.14);border-radius:10px;padding:12px 13px;
+    background:linear-gradient(160deg,rgba(20,42,78,.6),rgba(10,22,44,.75));
+    transition:transform .18s,border-color .18s,box-shadow .18s;
+    position:relative;overflow:hidden;
+  }
+  .line-card:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.5)}
+  .line-card.active{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px var(--accent),0 8px 22px rgba(56,189,248,.18);
+    background:linear-gradient(160deg,rgba(16,42,78,.85),rgba(9,24,48,.9));
+  }
+  .line-card.active::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,var(--cyan),var(--accent));
+    box-shadow:0 0 10px var(--cyan);
+  }
+  .line-card-top{display:flex;align-items:center;gap:8px}
+  .line-name{font-size:16px;font-weight:700;letter-spacing:1px}
+  .status-tag{font-size:10px;padding:1px 7px;border-radius:9px;margin-left:auto}
+  .status-tag.green{color:var(--green);background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.4)}
+  .status-tag.yellow{color:var(--yellow);background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.4)}
+  .status-tag.blue{color:var(--blue);background:rgba(96,165,250,.10);border:1px solid rgba(96,165,250,.4)}
+  .status-tag.red{color:var(--red);background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.4)}
+  .line-product{font-size:12.5px;color:var(--text-dim);margin:8px 0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .line-bar-wrap{height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+  .line-bar{height:100%;border-radius:4px;transition:width .6s ease;position:relative;overflow:hidden}
+  .line-bar::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+    background-size:220% 100%;animation:shimmer 2.4s linear infinite;
+  }
+  @keyframes shimmer{0%{background-position:160% 0}100%{background-position:-60% 0}}
+  .line-bar.green{background:linear-gradient(90deg,#22d3ee,#34d399);box-shadow:0 0 8px rgba(52,211,153,.5)}
+  .line-bar.yellow{background:linear-gradient(90deg,#fbbf24,#f97316);box-shadow:0 0 8px rgba(251,191,36,.5)}
+  .line-bar.blue{background:linear-gradient(90deg,#60a5fa,#818cf8);box-shadow:0 0 8px rgba(96,165,250,.5)}
+  .line-bar.red{background:linear-gradient(90deg,#f87171,#ef4444);box-shadow:0 0 8px rgba(248,113,113,.5)}
+  .line-meta{display:flex;align-items:baseline;margin-top:7px}
+  .line-progress{font-size:15px;font-weight:700}
+  .line-progress.green{color:var(--green)}
+  .line-progress.yellow{color:var(--yellow)}
+  .line-progress.blue{color:var(--blue)}
+  .line-progress.red{color:var(--red)}
+  .line-qty{margin-left:auto;font-size:11px;color:var(--text-weak)}
+
+  /* 状态灯 */
+  .light{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .light.green{background:var(--green);box-shadow:0 0 8px rgba(52,211,153,.9);animation:pulseG 1.8s infinite}
+  .light.yellow{background:var(--yellow);box-shadow:0 0 8px rgba(251,191,36,.9);animation:pulseY 1.8s infinite}
+  .light.blue{background:var(--blue);box-shadow:0 0 8px rgba(96,165,250,.9);animation:pulseB 1.8s infinite}
+  .light.red{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,.9);animation:pulseR 1.2s infinite}
+  @keyframes pulseG{0%,100%{opacity:1}50%{opacity:.55}}
+  @keyframes pulseY{0%,100%{opacity:1}50%{opacity:.55}}
+  @keyframes pulseB{0%,100%{opacity:1}50%{opacity:.55}}
+  @keyframes pulseR{0%,100%{opacity:1;box-shadow:0 0 10px rgba(248,113,113,1)}50%{opacity:.45;box-shadow:0 0 3px rgba(248,113,113,.4)}}
+
+  /* ===== 中间 ===== */
+  .center{flex:1;min-width:0;overflow-y:auto;padding-right:2px;display:flex;flex-direction:column;gap:14px}
+  .center::-webkit-scrollbar{width:6px}
+  .center::-webkit-scrollbar-thumb{background:rgba(56,189,248,.25);border-radius:3px}
+  /* 顶部状态横幅 */
+  .banner{
+    position:relative;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:16px 20px;display:flex;align-items:center;gap:28px;box-shadow:0 10px 30px rgba(2,8,20,.45);
+  }
+  .banner::before,.banner::after{content:'';position:absolute;width:15px;height:15px;opacity:.8;pointer-events:none}
+  .banner::before{top:-1px;left:-1px;border-top:2px solid var(--accent);border-left:2px solid var(--accent);border-top-left-radius:11px}
+  .banner::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--accent);border-right:2px solid var(--accent);border-bottom-right-radius:11px}
+  .banner-left{flex:1;min-width:0}
+  .banner-line{display:flex;align-items:center;gap:12px}
+  .banner-line h2{font-size:26px;font-weight:700;letter-spacing:2px}
+  .banner-line .status-tag{font-size:12px;padding:3px 12px;border-radius:13px}
+  .banner-product{font-size:15px;color:var(--text);margin-top:10px}
+  .banner-product b{color:var(--cyan);font-weight:600}
+  .banner-order{font-size:12.5px;color:var(--text-dim);margin-top:6px;letter-spacing:.5px}
+  .banner-order b{color:#cfe4ff;font-weight:600}
+  .banner-metrics{display:flex;gap:16px;flex-shrink:0}
+  .bm{min-width:96px;text-align:center;padding:8px 10px;border-radius:10px;
+    background:rgba(255,255,255,.03);border:1px solid rgba(96,168,255,.12)}
+  .bm .v{font-size:22px;font-weight:700;color:#e4f4ff;line-height:1.2}
+  .bm .v small{font-size:12px;color:var(--text-dim);font-weight:400}
+  .bm .k{font-size:11px;color:var(--text-weak);margin-top:3px;letter-spacing:1px}
+  .bm.hl .v{color:var(--cyan)}
+  /* 模块网格 */
+  .mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;flex:1}
+  .mod-card{
+    position:relative;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;box-shadow:0 10px 30px rgba(2,8,20,.45);
+    display:flex;flex-direction:column;
+  }
+  .mod-head{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:1px;margin-bottom:14px;flex-shrink:0}
+  .mod-head .dot{width:5px;height:5px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  .mod-head .extra{margin-left:auto;font-size:11px;color:var(--text-weak);font-weight:400;letter-spacing:0}
+  /* 通用指标行 */
+  .kv-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dashed rgba(96,168,255,.10)}
+  .kv-row:last-child{border-bottom:none}
+  .kv-row .k{color:var(--text-dim);font-size:12.5px}
+  .kv-row .v{font-size:13px;font-weight:600;color:#dbeafe}
+  .kv-row .v.good{color:var(--green)}
+  .kv-row .v.warn{color:var(--yellow)}
+  .kv-row .v.bad{color:var(--red)}
+  /* 圆环 */
+  .ring-wrap{display:flex;align-items:center;gap:16px;flex:1}
+  .ring{position:relative;width:86px;height:86px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center}
+  .ring::before{content:'';position:absolute;inset:8px;border-radius:50%;background:var(--panel-solid)}
+  .ring .rv{position:relative;text-align:center;line-height:1.1}
+  .ring .rv b{display:block;font-size:19px;font-weight:700}
+  .ring .rv span{font-size:9px;color:var(--text-weak)}
+  /* 物料 */
+  .mat-list{display:flex;flex-direction:column;gap:7px}
+  .mat-row{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 9px;border-radius:7px;
+    background:rgba(255,255,255,.025)}
+  .mat-row .icon{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .mat-row.ok .icon{background:var(--green);box-shadow:0 0 6px rgba(52,211,153,.7)}
+  .mat-row.miss .icon{background:var(--red);box-shadow:0 0 6px rgba(248,113,113,.7)}
+  .mat-row .nm{color:#cfe0f8}
+  .badge{margin-left:auto;font-size:10.5px;padding:1px 8px;border-radius:9px}
+  .badge.ok{color:var(--green);background:rgba(52,211,153,.10);border:1px solid rgba(52,211,153,.35)}
+  .badge.miss{color:var(--red);background:rgba(248,113,113,.10);border:1px solid rgba(248,113,113,.4)}
+  .badge.wait{color:var(--yellow);background:rgba(251,191,36,.10);border:1px solid rgba(251,191,36,.4)}
+  .miss-tip{font-size:11px;color:var(--red);margin-top:9px;line-height:1.7;
+    background:rgba(248,113,113,.07);border-left:2px solid var(--red);padding:6px 9px;border-radius:0 6px 6px 0}
+  /* 设备点阵 */
+  .eq-dots{display:flex;flex-wrap:wrap;gap:6px}
+  .eq-dot{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+    font-size:9px;color:#0a1428;font-weight:700}
+  .eq-dot.run{background:linear-gradient(145deg,#34d399,#0ea371);box-shadow:0 0 6px rgba(52,211,153,.4)}
+  .eq-dot.idle{background:linear-gradient(145deg,#fbbf24,#d97706)}
+  .eq-dot.fault{background:linear-gradient(145deg,#f87171,#dc2626);animation:pulseR 1.2s infinite}
+  /* 事件 */
+  .ev-list{display:flex;flex-direction:column;gap:8px}
+  .ev{display:flex;gap:10px;font-size:12px;align-items:flex-start;
+    padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.025)}
+  .ev .t{color:var(--text-weak);flex-shrink:0;font-size:11px;padding-top:1px}
+  .ev .c{line-height:1.55;color:#cfe0f8}
+  .ev .c b{font-weight:600}
+  .ev.warn{border-left:2px solid var(--yellow)}
+  .ev.err{border-left:2px solid var(--red)}
+  .ev.ok{border-left:2px solid var(--green)}
+  .ev.info{border-left:2px solid var(--blue)}
+
+  /* ===== 右侧 ===== */
+  .right-panel{width:340px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:14px}
+  .right-panel::-webkit-scrollbar{width:5px}
+  .right-panel::-webkit-scrollbar-thumb{background:rgba(56,189,248,.25);border-radius:3px}
+  .rp-card{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:18px 20px;box-shadow:0 10px 30px rgba(2,8,20,.45);flex:1;display:flex;flex-direction:column}
+  .rp-card .ring{width:100px;height:100px}
+  .rp-card .ring .rv b{font-size:23px}
+  .rp-card .ring::before{inset:10px}
+  .rp-card::before{content:'';position:absolute;top:-1px;left:-1px;width:15px;height:15px;pointer-events:none;
+    border-top:2px solid var(--accent);border-left:2px solid var(--accent);border-top-left-radius:11px;opacity:.8}
+  .rp-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;letter-spacing:1.5px;margin-bottom:12px}
+  .rp-title .icon{color:var(--cyan);font-size:15px}
+  .rp-title .en{font-size:9px;color:var(--text-weak);letter-spacing:2px;font-weight:400;margin-left:auto}
+  /* 全局状态块 */
+  .g-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .g-head .g-num{font-size:34px;font-weight:800;color:#e6f6ff;line-height:1;
+    text-shadow:0 0 22px rgba(34,211,238,.4)}
+  .g-head .g-num small{font-size:14px;color:var(--text-dim);font-weight:400}
+  .g-head .g-txt{font-size:12.5px;color:var(--text-dim);line-height:1.6}
+  .g-head .g-txt b{color:#dff3ff}
+  .g-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+  .g-tile{padding:9px 8px;border-radius:9px;text-align:center;background:rgba(255,255,255,.03);
+    border:1px solid rgba(96,168,255,.12)}
+  .g-tile .n{font-size:19px;font-weight:700;line-height:1.1}
+  .g-tile .n.g{color:var(--green)} .g-tile .n.y{color:var(--yellow)}
+  .g-tile .n.b{color:var(--blue)} .g-tile .n.r{color:var(--red)}
+  .g-tile .n.c{color:var(--cyan)}
+  .g-tile .t{font-size:10.5px;color:var(--text-weak);margin-top:4px}
+  /* 产量 */
+  .prod-wrap{display:flex;align-items:center;gap:18px}
+  .prod-right{flex:1;display:flex;flex-direction:column;gap:9px}
+  .prod-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}
+  .prod-row .k{color:var(--text-dim)}
+  .prod-row .v{font-weight:700;font-size:15px}
+  .prod-row .v.c{color:var(--cyan)}
+  .prod-row .v.warn{color:var(--yellow)}
+  .prod-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+  .prod-bar i{display:block;height:100%;border-radius:4px;
+    background:linear-gradient(90deg,#22d3ee,#34d399);box-shadow:0 0 8px rgba(52,211,153,.5)}
+  /* 完成度一览 */
+  .ov-line{display:flex;align-items:center;gap:9px;padding:6px 0}
+  .ov-line .nm{width:32px;font-size:12px;color:var(--text-dim);flex-shrink:0}
+  .ov-line .bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
+  .ov-line .bar i{display:block;height:100%;border-radius:3px;transition:width .6s}
+  .ov-line .pct{width:42px;text-align:right;font-size:12px;font-weight:700}
+  /* 综合指标 */
+  .mix{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .mix .m{text-align:center;padding:8px 4px;border-radius:9px;background:rgba(255,255,255,.03);
+    border:1px solid rgba(96,168,255,.10)}
+  .mix .m .n{font-size:18px;font-weight:700;color:#e4f4ff}
+  .mix .m .n.c{color:var(--cyan)} .mix .m .n.w{color:var(--yellow)}
+  .mix .m .t{font-size:10.5px;color:var(--text-weak);margin-top:3px}
+
+  /* ===== 底部状态栏 ===== */
+  .bottom-bar{
+    position:relative;z-index:3;height:72px;display:flex;align-items:center;gap:0;
+    padding:0 22px;background:linear-gradient(180deg,rgba(7,16,34,.97),rgba(14,32,62,.97));
+    border-top:1px solid var(--border);box-shadow:0 -6px 24px rgba(2,8,20,.5);
+  }
+  .bottom-bar::after{
+    content:'';position:absolute;left:0;right:0;top:-1px;height:1.5px;
+    background:linear-gradient(90deg,transparent,var(--accent) 18%,var(--cyan) 50%,var(--accent) 82%,transparent);
+    opacity:.65;
+  }
+  .bb-section{display:flex;align-items:center;gap:14px;flex-shrink:0}
+  .bb-kpi{
+    display:flex;align-items:center;gap:8px;padding:4px 14px;border-radius:8px;
+    background:rgba(255,255,255,.025);border:1px solid rgba(96,168,255,.09);
+  }
+  .bb-kpi .bv{font-size:20px;font-weight:700;line-height:1;letter-spacing:.5px}
+  .bb-kpi .bv.c{color:var(--cyan)} .bb-kpi .bv.w{color:var(--yellow)} .bb-kpi .bv.g{color:var(--green)}
+  .bb-kpi .bl{font-size:10px;color:var(--text-weak);line-height:1.3;letter-spacing:.5px}
+  .bb-sep{width:1px;height:32px;background:linear-gradient(180deg,transparent,rgba(96,168,255,.18),transparent);flex-shrink:0}
+  /* 翻牌板 - 机场候车牌风格 */
+  .bb-events{flex:1;display:flex;gap:28px;justify-content:flex-end;align-items:center;margin-left:16px;perspective:900px}
+  .flip-col{
+    position:relative;width:348px;height:46px;
+    perspective:900px;
+  }
+  .flip-col::after{
+    content:'';position:absolute;inset:0;z-index:10;pointer-events:none;
+    border-radius:6px;
+    background:linear-gradient(180deg,
+      rgba(2,8,20,.45) 0%,transparent 35%,
+      transparent 65%,rgba(2,8,20,.55) 100%);
+  }
+  .flip-inner{
+    position:relative;width:100%;height:100%;
+    transform-style:preserve-3d;
+    transition:transform .62s cubic-bezier(.4,0,.15,1);
+  }
+  .flip-inner.going{transform:rotateX(-180deg)}
+  .flip-face{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border-radius:6px;overflow:hidden;
+    display:flex;align-items:center;gap:10px;padding:0 14px;
+  }
+  .flip-face .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+  .flip-face .dot.r{background:var(--red);box-shadow:0 0 8px var(--red)}
+  .flip-face .dot.y{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+  .flip-face .dot.b{background:var(--blue);box-shadow:0 0 8px var(--blue)}
+  .flip-face .dot.g{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .flip-face .ft{font-size:11px;color:var(--text-weak);flex-shrink:0;font-weight:600;min-width:34px}
+  .flip-face .fm{font-size:13px;color:#dff6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flip-face .fm b{color:#fff;font-weight:700}
+  .flip-front{
+    background:linear-gradient(180deg,rgba(10,22,44,.96) 0%,rgba(14,30,52,.94) 50%,rgba(8,16,36,.96) 100%);
+    border:1px solid rgba(96,168,255,.18);
+  }
+  .flip-back{
+    background:linear-gradient(180deg,rgba(8,16,36,.96) 0%,rgba(14,30,52,.94) 50%,rgba(10,22,44,.96) 100%);
+    border:1px solid rgba(96,168,255,.18);
+    transform:rotateX(180deg);
+  }
+  /* 翻牌中间分割线 */
+  .flip-face::after{
+    content:'';position:absolute;left:0;right:0;top:50%;z-index:2;
+    height:2px;transform:translateY(-1px);
+    background:linear-gradient(90deg,
+      transparent 4px,
+      rgba(34,211,238,.25) 6px,
+      rgba(34,211,238,.12) 50%,
+      rgba(34,211,238,.25) calc(100% - 6px),
+      transparent calc(100% - 4px));
+  }
+  .flip-face::before{
+    content:'';position:absolute;left:0;right:0;top:50%;z-index:3;
+    height:1px;transform:translateY(-.5px);
+    background:rgba(0,0,0,.75);
+    box-shadow:0 0 6px rgba(0,0,0,.6);
+  }
+  .flip-label{
+    position:absolute;right:14px;bottom:3px;z-index:11;pointer-events:none;
+    font-size:8px;color:rgba(96,168,255,.3);letter-spacing:2px;
+  }
+
+  /* 滚动条美化 */
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(56,189,248,.22);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo">◈</div>
+    <div>
+      <h1>MiWind·米风电器 · <span>产线生产看板【预览摸版】</span></h1>
+      <div class="sub">S M A R T   F A C T O R Y   C O C K P I T</div>
+    </div>
+  </div>
+  <div class="head-right">
+    <div class="shift-box">
+      <div class="shift-row">
+        <span class="shift-tag" id="shiftTag">早班</span>
+        <span class="shift-time" id="shiftRange">08:00 - 20:00</span>
+      </div>
+      <div class="shift-bar"><i id="shiftFill"></i></div>
+    </div>
+    <div class="clock">
+      <div class="time num" id="clockTime">--:--:--</div>
+      <div class="date" id="clockDate">----</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- 左侧：产线导航 -->
+  <aside class="panel left-panel">
+    <div class="panel-title"><span class="icon">▦</span>产线导航<span class="en">LINES</span></div>
+    <div class="legend">
+      <span><i class="light green"></i>正常</span>
+      <span><i class="light yellow"></i>换线</span>
+      <span><i class="light blue"></i>质检</span>
+      <span><i class="light red"></i>异常</span>
+    </div>
+    <div class="line-list" id="lineList"></div>
+  </aside>
+
+  <!-- 中间：产线详情 -->
+  <section class="center" id="center"></section>
+
+  <!-- 右侧：全局一览 -->
+  <aside class="right-panel" id="right"></aside>
+</main>
+
+<!-- 底部状态栏 -->
+<footer class="bottom-bar" id="bottomBar"></footer>
+
+<script>
+/* ================= 数据 ================= */
+const STATUS = {
+  normal:     { label:'正常运行', cls:'green' },
+  changeover: { label:'换线准备', cls:'yellow' },
+  quality:    { label:'质检中',   cls:'blue' },
+  down:       { label:'缺料停线', cls:'red' },
+};
+
+const LINES = [
+  {
+    id:'l1', name:'一线', status:'normal', product:'小Q款1.5米', progress:68,
+    attendance:{ total:6, present:5, multiSkill:3, shift:'早班' },
+    order:{ no:'MO003722', plan:200, done:86, eta:'16:10' },
+    nextOrder:{ product:'小Q款1.2米', time:'16:30', ready:true },
+    capacity:{ plan:1200, actual:816, outputPerPerson:31.4, stdHourRate:94.2, effectiveRate:88.5 },
+    materials:[
+      { name:'铁件物料', ok:true }, { name:'电子物料', ok:true },
+      { name:'包材物料', ok:true }, { name:'电机', ok:true }, { name:'辅料', ok:true }
+    ],
+    skillDist:{ senior:2, intermediate:1, junior:1, apprentice:1 },
+    quality:{ yield:98.6, defect:11, lot:3 }
+  },
+  {
+    id:'l2', name:'二线', status:'normal', product:'荣事达斜流管道风机', progress:45,
+    attendance:{ total:10, present:9, multiSkill:3, shift:'早班' },
+    order:{ no:'MO003726', plan:600, done:205, eta:'17:40' },
+    nextOrder:{ product:'斜流管道风机', time:'18:20', ready:true },
+    capacity:{ plan:600, actual:205, outputPerPerson:14.0, stdHourRate:88.7, effectiveRate:85.1 },
+    materials:[
+      { name:'铁件物料', ok:true }, { name:'电子物料', ok:true },
+      { name:'包材物料', ok:true }, { name:'电机', ok:true }, { name:'塑料外壳', ok:true },{ name:'辅料', ok:true }
+    ],
+    skillDist:{ senior:4, intermediate:1, junior:3, apprentice:1 },
+    quality:{ yield:99.1, defect:4, lot:3 }
+  },
+  {
+    id:'l3', name:'三线', status:'changeover', product:'商用除湿机', progress:92,
+    attendance:{ total:10, present:10, multiSkill:3, shift:'早班' },
+    order:{ no:'MO00735', plan:200, done:52, eta:'12:30', finished:true },
+    nextOrder:{ product:'圆形管道风机', time:'14:00', ready:false },
+    capacity:{ plan:200, actual:52, outputPerPerson:25.1, stdHourRate:96.5, effectiveRate:84.2 },
+    materials:[
+      { name:'铁件物料', ok:true }, { name:'电子物料', ok:true },
+      { name:'包材物料', ok:true }, { name:'电机', ok:true }, { name:'辅料', ok:true }
+    ],
+    skillDist:{ senior:2, intermediate:10, junior:7, apprentice:3 },
+    quality:{ yield:99.3, defect:4, lot:2 }
+  },
+  {
+    id:'l4', name:'四线', status:'quality', product:'冷库风机', progress:37,
+    attendance:{ total:12, present:10, multiSkill:3, shift:'早班' },
+    order:{ no:'MO007362', plan:500, done:155, eta:'18:05' },
+    nextOrder:{ product:'冷库风机', time:'19:00', ready:true },
+    capacity:{ plan:500, actual:155, outputPerPerson:29.2, stdHourRate:82.3, effectiveRate:79.6 },
+    materials:[
+      { name:'冷轧铁板板', ok:true }, { name:'电机', ok:true },
+      { name:'紧固件', ok:true }, { name:'包装材料', ok:true }
+    ],
+    skillDist:{ senior:2, intermediate:3, junior:3, apprentice:2 },
+    quality:{ yield:99.0, defect:6, lot:2 }
+  },
+  {
+    id:'l5', name:'五线', status:'down', product:'电机定子绕组', progress:51,
+    attendance:{ total:16, present:16, multiSkill:4, shift:'早班' },
+    order:{ no:'MO-260801-0215', plan:800, done:408, eta:'--', paused:true },
+    nextOrder:{ product:'电机转子', time:'待定', ready:false },
+    capacity:{ plan:800, actual:408, outputPerPerson:15.7, stdHourRate:65.8, effectiveRate:0 },
+    materials:[
+      { name:'矽钢片', ok:true }, { name:'漆包线', ok:false },
+      { name:'绝缘纸', ok:true }, { name:'引出线', ok:false }
+    ],
+    skillDist:{ senior:3, intermediate:5, junior:4, apprentice:4 },
+    quality:{ yield:98.2, defect:7, lot:2 }
+  },
+  {
+    id:'l6', name:'六线', status:'normal', product:'配电柜壳体', progress:84,
+    attendance:{ total:22, present:21, multiSkill:4, shift:'早班' },
+    order:{ no:'MO-260802-0058', plan:500, done:420, eta:'15:45' },
+    nextOrder:{ product:'配电柜内隔板', time:'16:10', ready:true },
+    capacity:{ plan:500, actual:420, outputPerPerson:20.0, stdHourRate:91.4, effectiveRate:90.3 },
+    materials:[
+      { name:'冷轧钢板', ok:true }, { name:'铰链', ok:true },
+      { name:'喷涂粉末', ok:true }, { name:'密封条', ok:true }, { name:'紧固件', ok:true }
+    ],
+    skillDist:{ senior:2, intermediate:10, junior:7, apprentice:2 },
+    quality:{ yield:99.5, defect:2, lot:3 }
+  }
+];
+
+const EVENTS = [
+  { t:'14:02', cls:'err',  html:'<b>五线</b> 缺料报警：漆包线库存不足，产线暂停' },
+  { t:'13:47', cls:'warn', html:'<b>三线</b> 换线准备启动：正在清线并核对新工单' },
+  { t:'13:35', cls:'info', html:'<b>四线</b> 批量质检开启：批次 B20260802-03 已送检' },
+  { t:'13:18', cls:'ok',   html:'<b>六线</b> 班产达成 84%，进度领先计划' },
+  { t:'12:58', cls:'info', html:'<b>二线</b> 完成早班中段交接，出勤正常' },
+  { t:'12:40', cls:'err',  html:'<b>五线</b> 关键岗位人员脱岗告警' },
+  { t:'12:22', cls:'ok',   html:'<b>一线</b> 岗位巡检通过：12 项全部合格' }
+];
+
+let selectedId = 'l1';
+
+/* ================= 工具 ================= */
+const $ = id => document.getElementById(id);
+const fmt = n => n.toLocaleString('zh-CN');
+
+function countBy(lines){
+  const c = { normal:0, changeover:0, quality:0, down:0 };
+  lines.forEach(l => c[l.status]++);
+  return c;
+}
+
+/* ================= 渲染：左侧 ================= */
+function renderLeft(){
+  $('lineList').innerHTML = LINES.map(l => {
+    const st = STATUS[l.status];
+    const pct = Math.round(l.progress);
+    return `
+    <button class="line-card ${l.id===selectedId?'active':''}" data-id="${l.id}">
+      <div class="line-card-top">
+        <span class="light ${st.cls}"></span>
+        <span class="line-name">${l.name}</span>
+        <span class="status-tag ${st.cls}">${st.label}</span>
+      </div>
+      <div class="line-product">${l.product}</div>
+      <div class="line-bar-wrap"><div class="line-bar ${st.cls}" style="width:${pct}%"></div></div>
+      <div class="line-meta">
+        <span class="line-progress ${st.cls} num">${pct}%</span>
+        <span class="line-qty">${fmt(l.order.done)} / ${fmt(l.order.plan)} 件</span>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+/* ================= 渲染：中间 ================= */
+function ringStyle(p, color){
+  return `background:conic-gradient(${color} 0 ${p}%, rgba(120,160,220,.12) ${p}% 100%);`;
+}
+
+function renderCenter(){
+  const l = LINES.find(x => x.id === selectedId);
+  const st = STATUS[l.status];
+  const pct = Math.round(l.progress);
+  const c = l.capacity;
+  const att = l.attendance;
+  const q = l.quality;
+  const order = l.order;
+  const matOk = l.materials.filter(m => m.ok).length;
+  const matPct = Math.round(matOk / l.materials.length * 100);
+  const missList = l.materials.filter(m => !m.ok);
+
+  $('center').innerHTML = `
+  <!-- 状态总览横幅 -->
+  <div class="banner">
+    <div class="banner-left">
+      <div class="banner-line">
+        <h2>${l.name}</h2>
+        <span class="light ${st.cls}"></span>
+        <span class="status-tag ${st.cls}">${st.label}</span>
+      </div>
+      <div class="banner-product">正在生产：<b>${l.product}</b></div>
+      <div class="banner-order">工单 <b>${order.no}</b> · 计划 <b>${fmt(order.plan)}</b> 件 · 已完成 <b>${fmt(order.done)}</b> 件${order.eta !== '--' ? ' · 预计完工 <b>'+order.eta+'</b>' : ''}${order.paused ? ' · <span style="color:var(--red)">生产暂停中</span>' : ''}</div>
+    </div>
+    <div class="banner-metrics">
+      <div class="bm"><div class="v num">${att.present}<small>/${att.total}</small></div><div class="k">出勤人数</div></div>
+      <div class="bm hl"><div class="v num">${pct}<small>%</small></div><div class="k">计划达成</div></div>
+      <div class="bm"><div class="v num">${c.outputPerPerson}<small> 件/人</small></div><div class="k">人均产出</div></div>
+      <div class="bm"><div class="v num">${c.stdHourRate}<small>%</small></div><div class="k">工时达成</div></div>
+    </div>
+  </div>
+
+  <div class="mod-grid">
+    <!-- 物料齐套 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>物料齐套<span class="extra">${matOk}/${l.materials.length} 项</span></div>
+      <div class="ring-wrap">
+        <div class="ring" style="${ringStyle(matPct, missList.length ? '#f87171' : '#34d399')}">
+          <div class="rv"><b class="num" style="color:${missList.length?'var(--red)':'var(--green)'}">${matPct}%</b><span>齐套率</span></div>
+        </div>
+        <div style="flex:1;min-width:0">
+          ${l.materials.map(m => `
+            <div class="mat-row ${m.ok?'ok':'miss'}">
+              <span class="icon"></span><span class="nm">${m.name}</span>
+              <span class="badge ${m.ok?'ok':'miss'}">${m.ok?'已备齐':'缺料'}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+      ${missList.length ? `<div class="miss-tip">⚠ 缺料项：${missList.map(m=>m.name).join('、')}。漆包线预计 15:20 到料；引出线供应商延迟，预计 17:00 到料。</div>` : ''}
+    </div>
+
+    <!-- 工单与订单 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>工单与订单<span class="extra">当前 / 下一单</span></div>
+      <div class="kv-row"><span class="k">当前工单</span><span class="v">${order.no}</span></div>
+      <div class="kv-row"><span class="k">订单产品</span><span class="v">${l.product}</span></div>
+      <div class="kv-row"><span class="k">计划 / 完成</span><span class="v num">${fmt(order.plan)} / ${fmt(order.done)}</span></div>
+      <div class="kv-row"><span class="k">剩余数量</span><span class="v num">${order.paused?'—':fmt(Math.max(order.plan-order.done,0))}</span></div>
+      <div class="kv-row"><span class="k">预计完工</span><span class="v num">${order.eta}</span></div>
+      <div style="height:1px;background:linear-gradient(90deg,rgba(56,189,248,.35),transparent);margin:9px 0"></div>
+      <div class="kv-row"><span class="k">下一订单</span><span class="v">${l.nextOrder.product}</span></div>
+      <div class="kv-row"><span class="k">换线时间</span><span class="v num">${l.nextOrder.time}</span></div>
+      <div class="kv-row"><span class="k">物料准备</span><span class="v ${l.nextOrder.ready?'good':'warn'}">${l.nextOrder.ready?'已备齐':'备料中'}</span></div>
+    </div>
+
+    <!-- 人效看板 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>人效看板<span class="extra">班产</span></div>
+      <div class="ring-wrap">
+        <div class="ring" style="${ringStyle(c.effectiveRate, '#22d3ee')}">
+          <div class="rv"><b class="num" style="color:var(--cyan)">${c.effectiveRate}</b><span>有效工时率 %</span></div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="kv-row"><span class="k">人均产出</span><span class="v num">${c.outputPerPerson} 件/人</span></div>
+          <div class="kv-row"><span class="k">标准工时达成</span><span class="v ${c.stdHourRate>=90?'good':c.stdHourRate>=75?'':'bad'} num">${c.stdHourRate}%</span></div>
+          <div class="kv-row"><span class="k">有效工时率</span><span class="v ${c.effectiveRate>=85?'good':c.effectiveRate>=70?'':'bad'} num">${c.effectiveRate}%</span></div>
+          <div class="kv-row"><span class="k">班产达成</span><span class="v ${pct>=80?'good':pct>=50?'':'bad'} num">${pct}%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 人员出勤 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>人员出勤<span class="extra">${att.shift} · ${l.name}</span></div>
+      <div class="ring-wrap">
+        <div class="ring" style="${ringStyle(Math.round(att.present/att.total*100), '#34d399')}">
+          <div class="rv"><b class="num" style="color:var(--green)">${Math.round(att.present/att.total*100)}</b><span>在岗率 %</span></div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="kv-row"><span class="k">出勤 / 在编</span><span class="v num">${att.present} / ${att.total} 人</span></div>
+          <div class="kv-row"><span class="k">缺勤</span><span class="v ${att.total-att.present>0?'warn':'good'} num">${att.total-att.present} 人</span></div>
+          <div class="kv-row"><span class="k">多能工</span><span class="v num">${att.multiSkill} 人</span></div>
+          <div class="kv-row"><span class="k">班次</span><span class="v">${att.shift} 08:00-20:00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 技能分布 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>技能分布<span class="extra">共 ${att.present} 人</span></div>
+      <div class="kv-row"><span class="k">高级技工</span><span class="v num" style="color:var(--cyan)">${l.skillDist.senior} 人</span></div>
+      <div style="margin:6px 0;height:5px;border-radius:3px;background:rgba(255,255,255,.06);display:flex;overflow:hidden">
+        <span style="display:block;height:100%;width:${Math.round(l.skillDist.senior/att.present*100)}%;background:var(--cyan);border-radius:3px 0 0 3px"></span>
+        <span style="display:block;height:100%;width:${Math.round(l.skillDist.intermediate/att.present*100)}%;background:var(--green)"></span>
+        <span style="display:block;height:100%;width:${Math.round(l.skillDist.junior/att.present*100)}%;background:var(--yellow)"></span>
+        <span style="display:block;height:100%;width:${Math.round(l.skillDist.apprentice/att.present*100)}%;background:rgba(120,150,200,.35);border-radius:0 3px 3px 0"></span>
+      </div>
+      <div class="kv-row"><span class="k">中级技工</span><span class="v num" style="color:var(--green)">${l.skillDist.intermediate} 人</span></div>
+      <div class="kv-row"><span class="k">初级技工</span><span class="v num" style="color:var(--yellow)">${l.skillDist.junior} 人</span></div>
+      <div class="kv-row"><span class="k">学徒</span><span class="v num" style="color:var(--text-dim)">${l.skillDist.apprentice} 人</span></div>
+      <div style="height:1px;background:linear-gradient(90deg,rgba(56,189,248,.35),transparent);margin:10px 0 8px"></div>
+      <div class="kv-row"><span class="k">多能工人数</span><span class="v num" style="color:var(--cyan)">${att.multiSkill} 人</span></div>
+      <div class="kv-row"><span class="k">多能工占比</span><span class="v good num">${Math.round(att.multiSkill/att.total*100)}%</span></div>
+    </div>
+
+    <!-- 质量管控 -->
+    <div class="mod-card">
+      <div class="mod-head"><span class="dot"></span>质量管控<span class="extra">抽检 ${q.lot} 批</span></div>
+      <div class="ring-wrap">
+        <div class="ring" style="${ringStyle(q.yield, '#60a5fa')}">
+          <div class="rv"><b class="num" style="color:var(--blue)">${q.yield}</b><span>良率 %</span></div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="kv-row"><span class="k">良品率</span><span class="v good num">${q.yield}%</span></div>
+          <div class="kv-row"><span class="k">不良数</span><span class="v ${q.defect>6?'warn':'good'} num">${q.defect} 件</span></div>
+          <div class="kv-row"><span class="k">抽检批次</span><span class="v num">${q.lot} 批</span></div>
+          <div class="kv-row"><span class="k">检验状态</span><span class="v">${l.status==='quality'?'检验中':'已完成'}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ================= 渲染：右侧 ================= */
+function renderRight(){
+  const cnt = countBy(LINES);
+  const totalPlan = LINES.reduce((s,l)=>s+l.order.plan,0);
+  const totalDone = LINES.reduce((s,l)=>s+l.order.done,0);
+  const rate = Math.round(totalDone/totalPlan*100);
+  const avgStdHourRate = Math.round(LINES.reduce((s,l)=>s+l.capacity.stdHourRate,0)/LINES.length*10)/10;
+  const totalAttendance = LINES.reduce((s,l)=>s+l.attendance.present,0);
+  const avgProgress = Math.round(LINES.reduce((s,l)=>s+l.progress,0)/LINES.length);
+
+  $('right').innerHTML = `
+  <!-- 工厂全局状态 -->
+  <div class="rp-card" style="flex:1.3">
+    <div class="rp-title"><span class="icon">◉</span>工厂全局状态<span class="en">OVERVIEW</span></div>
+    <div class="g-head">
+      <div class="g-num num">${LINES.length}<small> 条</small></div>
+      <div class="g-txt">共 <b>${LINES.length}</b> 条产线 · <b style="color:var(--green)">${cnt.normal}</b> 正常<br><b style="color:var(--yellow)">${cnt.changeover}</b> 换线 · <b style="color:var(--blue)">${cnt.quality}</b> 质检 · <b style="color:var(--red)">${cnt.down}</b> 异常</div>
+    </div>
+    <div class="g-tiles">
+      <div class="g-tile"><div class="n c num">${LINES.length}</div><div class="t">产线总数</div></div>
+      <div class="g-tile"><div class="n g num">${cnt.normal}</div><div class="t">正常运行</div></div>
+      <div class="g-tile"><div class="n y num">${cnt.changeover}</div><div class="t">换线准备</div></div>
+      <div class="g-tile"><div class="n b num">${cnt.quality}</div><div class="t">质检中</div></div>
+      <div class="g-tile"><div class="n r num">${cnt.down}</div><div class="t">异常停线</div></div>
+      <div class="g-tile"><div class="n c num">${avgStdHourRate}<small style="font-size:10px">%</small></div><div class="t">工时达成</div></div>
+    </div>
+    <div style="margin-top:12px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.02);border:1px solid rgba(96,168,255,.08);display:flex;gap:24px">
+      <div style="text-align:center;flex:1"><div class="num" style="font-size:22px;font-weight:700;color:#e4f4ff">${fmt(totalDone)}</div><div style="font-size:10px;color:var(--text-weak);margin-top:2px">总产量 件</div></div>
+      <div style="width:1px;background:rgba(96,168,255,.12)"></div>
+      <div style="text-align:center;flex:1"><div class="num" style="font-size:22px;font-weight:700;color:#e4f4ff">${totalAttendance}</div><div style="font-size:10px;color:var(--text-weak);margin-top:2px">出勤总人数</div></div>
+      <div style="width:1px;background:rgba(96,168,255,.12)"></div>
+      <div style="text-align:center;flex:1"><div class="num" style="font-size:22px;font-weight:700;color:var(--cyan)">${avgProgress}%</div><div style="font-size:10px;color:var(--text-weak);margin-top:2px">平均进度</div></div>
+    </div>
+  </div>
+
+  <!-- 今日产量 -->
+  <div class="rp-card" style="flex:1.1">
+    <div class="rp-title"><span class="icon">▤</span>今日产量达成<span class="en">OUTPUT</span></div>
+    <div class="prod-wrap">
+      <div class="ring" style="${ringStyle(rate, '#22d3ee')}">
+        <div class="rv"><b class="num" style="color:var(--cyan)">${rate}</b><span>达成 %</span></div>
+      </div>
+      <div class="prod-right">
+        <div class="prod-row"><span class="k">实际产量</span><span class="v c num">${fmt(totalDone)} 件</span></div>
+        <div class="prod-row"><span class="k">计划产量</span><span class="v num">${fmt(totalPlan)} 件</span></div>
+        <div class="prod-row"><span class="k">差额</span><span class="v ${rate>=70?'':'warn'} num">${fmt(totalPlan-totalDone)} 件</span></div>
+        <div class="prod-bar"><i style="width:${rate}%"></i></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <span style="font-size:10px;color:var(--text-weak)">0</span>
+          <span style="flex:1;font-size:10px;color:var(--text-weak);text-align:right">${fmt(totalPlan)}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 各产线完成度 -->
+  <div class="rp-card" style="flex:1.3">
+    <div class="rp-title"><span class="icon">▥</span>产线完成度一览<span class="en">PROGRESS</span></div>
+    ${LINES.map(l => {
+      const st = STATUS[l.status];
+      const color = {green:'#34d399',yellow:'#fbbf24',blue:'#60a5fa',red:'#f87171'}[st.cls];
+      const p = Math.round(l.progress);
+      return `
+      <div class="ov-line">
+        <span class="nm">${l.name}</span>
+        <span class="light ${st.cls}"></span>
+        <div class="bar"><i style="width:${p}%;background:linear-gradient(90deg,${color}88,${color});box-shadow:0 0 6px ${color}55"></i></div>
+        <span class="pct num" style="color:${color}">${p}%</span>
+      </div>`;
+    }).join('')}
+    <div style="margin-top:auto;padding-top:10px;border-top:1px dashed rgba(96,168,255,.12);display:flex;justify-content:space-between;font-size:11px;color:var(--text-weak)">
+      <span>工厂平均进度</span>
+      <span class="num" style="color:var(--cyan);font-weight:700">${avgProgress}%</span>
+    </div>
+  </div>`;
+}
+
+/* ================= 时钟与班次 ================= */
+function pad(n){ return String(n).padStart(2,'0'); }
+function tickClock(){
+  const now = new Date();
+  $('clockTime').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const week = ['日','一','二','三','四','五','六'][now.getDay()];
+  $('clockDate').textContent = `${now.getFullYear()}年${pad(now.getMonth()+1)}月${pad(now.getDate())}日 · 星期${week}`;
+  // 班次进度（早班 08:00-20:00）
+  const h = now.getHours() + now.getMinutes()/60;
+  const pct = Math.max(0, Math.min(100, (h-8)/12*100));
+  $('shiftFill').style.width = pct.toFixed(1) + '%';
+  const remain = Math.max(0, 20-h);
+  $('shiftRange').textContent = `08:00-20:00 · 距下班 ${Math.floor(remain)}h ${Math.round((remain%1)*60)}m`;
+}
+
+/* ================= 翻牌板状态 ================= */
+let flipAIdx = 0;
+let flipBIdx = 1;
+let flipBusy = false;
+
+function makeFlipFace(evt){
+  const dc = evt.cls==='err'?'r':evt.cls==='warn'?'y':evt.cls==='ok'?'g':'b';
+  return `<span class="dot ${dc}"></span><span class="ft num">${evt.t}</span><span class="fm">${evt.html}</span>`;
+}
+
+function doFlip(){
+  if(flipBusy) return;
+  flipBusy = true;
+
+  // 两个翻牌板同时翻转
+  const cols = document.querySelectorAll('.flip-col');
+  if(cols.length < 2){ flipBusy = false; return; }
+
+  const nextA = EVENTS[(flipAIdx + 2) % EVENTS.length];
+  const nextB = EVENTS[(flipBIdx + 2) % EVENTS.length];
+
+  // 更新背面内容
+  cols[0].querySelector('.flip-back').innerHTML = makeFlipFace(nextA);
+  cols[1].querySelector('.flip-back').innerHTML = makeFlipFace(nextB);
+
+  // 翻转
+  cols[0].querySelector('.flip-inner').classList.add('going');
+  cols[1].querySelector('.flip-inner').classList.add('going');
+
+  setTimeout(() => {
+    // 翻转到底 → 更新正面，移除 class
+    flipAIdx = (flipAIdx + 2) % EVENTS.length;
+    flipBIdx = (flipBIdx + 2) % EVENTS.length;
+
+    cols[0].querySelector('.flip-front').innerHTML = makeFlipFace(EVENTS[flipAIdx]);
+    cols[1].querySelector('.flip-front').innerHTML = makeFlipFace(EVENTS[flipBIdx]);
+    cols[0].querySelector('.flip-inner').classList.remove('going');
+    cols[1].querySelector('.flip-inner').classList.remove('going');
+    flipBusy = false;
+  }, 320); // 动画中点
+}
+
+/* ================= 渲染：底部状态栏 ================= */
+function renderBottomBar(){
+  const totalDone = LINES.reduce((s,l)=>s+l.order.done,0);
+  const totalDefect = LINES.reduce((s,l)=>s+l.quality.defect,0);
+  const badRate = totalDone ? (totalDefect/totalDone*100).toFixed(2) : '0.00';
+  const avgOutputPerPerson = Math.round(LINES.reduce((s,l)=>s+l.capacity.outputPerPerson,0)/LINES.length*10)/10;
+  const totalAttendance = LINES.reduce((s,l)=>s+l.attendance.present,0);
+
+  // 取前两个事件作为初始显示
+  const evA = EVENTS[flipAIdx % EVENTS.length];
+  const evB = EVENTS[flipBIdx % EVENTS.length];
+
+  $('bottomBar').innerHTML = `
+    <div class="bb-section">
+      <div class="bb-kpi"><div class="bv c num">${badRate}%</div><div class="bl">不良率</div></div>
+      <div class="bb-kpi"><div class="bv num">386</div><div class="bl">在制品 WIP</div></div>
+      <div class="bb-sep"></div>
+      <div class="bb-kpi"><div class="bv w num">${avgOutputPerPerson}</div><div class="bl">人均产出</div></div>
+      <div class="bb-kpi"><div class="bv num">${totalAttendance}</div><div class="bl">出勤总人数</div></div>
+    </div>
+    <div class="bb-events">
+      <div class="flip-col">
+        <div class="flip-label">实时事件</div>
+        <div class="flip-inner">
+          <div class="flip-face flip-front">${makeFlipFace(evA)}</div>
+          <div class="flip-face flip-back"></div>
+        </div>
+      </div>
+      <div class="flip-col">
+        <div class="flip-label">实时事件</div>
+        <div class="flip-inner">
+          <div class="flip-face flip-front">${makeFlipFace(evB)}</div>
+          <div class="flip-face flip-back"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ================= 实时模拟 ================= */
+function simulate(){
+  LINES.forEach(l => {
+    if(l.status === 'normal' || l.status === 'quality'){
+      l.progress = Math.min(99.9, l.progress + (Math.random()*0.25 + 0.08));
+      l.order.done = Math.round(l.order.plan * l.progress / 100);
+      l.capacity.actual = l.order.done;
+    }
+  });
+  renderLeft();
+  if(['normal','quality'].includes(LINES.find(x=>x.id===selectedId).status)) renderCenter();
+  renderRight();
+  renderBottomBar();
+}
+
+/* ================= 事件 ================= */
+$('lineList').addEventListener('click', e => {
+  const card = e.target.closest('.line-card');
+  if(!card) return;
+  selectedId = card.dataset.id;
+  renderLeft();
+  renderCenter();
+});
+
+/* ================= 启动 ================= */
+renderLeft();
+renderCenter();
+renderRight();
+renderBottomBar();
+tickClock();
+setInterval(tickClock, 1000);
+setInterval(simulate, 3500);
+setInterval(doFlip, 4500);
+</script>
+</body>
+</html>
