@@ -118,14 +118,24 @@ export const all = async (sql, args = []) => (await exec(sql, args)).rows;
 export const one = async (sql, args = []) => (await all(sql, args))[0] || null;
 export const run = (sql, args = []) => exec(sql, args);
 
-/* ---------------- 密码摘要（浏览器用 WebCrypto） ---------------- */
+/* ---------------- 密码摘要（与 server.js 完全一致：PBKDF2-SHA256） ---------------- */
+const PBKDF2_ITER = 120000;
+const PBKDF2_LEN = 32;
+const enc = new TextEncoder();
+
 export async function hashPassword(password, salt) {
-  const data = new TextEncoder().encode(`${salt}::${password}`);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf))
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(password)), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', salt: enc.encode(String(salt)), iterations: PBKDF2_ITER, hash: 'SHA-256' },
+    key,
+    PBKDF2_LEN * 8
+  );
+  const hex = Array.from(new Uint8Array(bits))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
+  return `pbkdf2$${PBKDF2_ITER}$${hex}`;
 }
+
 export function makeSalt() {
   return Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -135,8 +145,16 @@ export async function makePasswordHash(password) {
   const salt = makeSalt();
   return { salt, hash: await hashPassword(password, salt) };
 }
+
+/** 是否为浏览器无法验证的旧格式摘要（早期 scrypt / 纯 SHA-256） */
+export function isLegacyHash(hash) {
+  const h = String(hash || '');
+  return !!h && !h.startsWith('pbkdf2$');
+}
+
 export async function verifyPassword(password, salt, hash) {
   if (!salt || !hash) return false;
+  if (isLegacyHash(hash)) return false; // 旧格式只能由 Node 端验证
   return (await hashPassword(password, salt)) === hash;
 }
 
@@ -158,6 +176,10 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS outbound (id INTEGER PRIMARY KEY AUTOINCREMENT, out_date TEXT NOT NULL, product_code TEXT NOT NULL DEFAULT '', product_name TEXT NOT NULL DEFAULT '', spec TEXT NOT NULL DEFAULT '', qty REAL NOT NULL DEFAULT 0, summary TEXT NOT NULL DEFAULT '', remark TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL)`,
 ];
 
+/* 首次初始化数据库时的管理员密码（仅新建的库生效，已存在的库不受影响）。
+   刻意不在界面上显示，需要时请到「系统配置 → 账号与安全」自行修改。 */
+const DEFAULT_ADMIN_PASSWORD = 'wq*533520';
+
 const DEFAULT_SETTINGS = {
   delete_password: '888888',
   company_name: '生产管理系统',
@@ -172,7 +194,7 @@ export async function ensureSchema() {
 
   const admin = await one(`SELECT id FROM users WHERE username = 'admin'`);
   if (!admin) {
-    const { salt, hash } = await makePasswordHash('admin123');
+    const { salt, hash } = await makePasswordHash(DEFAULT_ADMIN_PASSWORD);
     await run(`INSERT INTO users(username, password_hash, salt, role, created_at) VALUES(?,?,?,?,?)`, [
       'admin',
       hash,

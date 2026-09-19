@@ -462,7 +462,7 @@ export async function render(view) {
       el('div', { class: 'panel' }, [
         el('div', { class: 'panel-head' }, [el('div', { class: 'title', text: '登录账号' })]),
         el('div', { class: 'panel-body' }, [
-          el('div', { class: 'cfg-note', html: '打开网页默认为 <b>游客（只读）</b>，登录后才能录入、修改数据。默认管理员账号：<code>admin / admin123</code>，请登录后及时修改密码。' }),
+          el('div', { class: 'cfg-note', html: '打开网页默认为 <b>游客（只读）</b>，登录后才能录入、修改数据。管理员账号为 <code>admin</code>，密码由数据库初始化时设定，如已遗忘可用下方的修改密码功能重置。' }),
           el('div', { class: 'form-row', style: 'margin-top:10px' }, [
             el('button', {
               class: 'btn btn-sm',

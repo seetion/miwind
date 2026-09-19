@@ -154,16 +154,32 @@ const num = (v) => {
 };
 const str = (v) => (v === null || v === undefined ? '' : String(v));
 
+/* 密码摘要：PBKDF2-SHA256，与网页版（浏览器 WebCrypto）完全一致，
+   这样同一个 libSQL 库在网页版 / 桌面版 / 云库版之间都能登录 */
+const PBKDF2_ITER = 120000;
+const PBKDF2_LEN = 32;
+
+/* 首次初始化数据库时使用的管理员密码（仅新库生效，已存在的库不受影响）。
+   这里刻意不打印到控制台，避免每次启动都暴露账号信息。 */
+const DEFAULT_ADMIN_PASSWORD = process.env.PMC_ADMIN_PASSWORD || 'wq*533520';
+
 function hashPassword(password, salt) {
-  return crypto.scryptSync(password, salt, 64).toString('hex');
+  const hex = crypto.pbkdf2Sync(String(password), String(salt), PBKDF2_ITER, PBKDF2_LEN, 'sha256').toString('hex');
+  return `pbkdf2$${PBKDF2_ITER}$${hex}`;
 }
 function makeHash(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   return { salt, hash: hashPassword(password, salt) };
 }
 function verifyPassword(password, salt, hash) {
-  const h = Buffer.from(hashPassword(password, salt));
-  const o = Buffer.from(hash);
+  const stored = String(hash || '');
+  if (!stored || !salt) return false;
+  // 兼容早期版本用 scrypt 生成的摘要
+  const calc = stored.startsWith('pbkdf2$')
+    ? hashPassword(password, salt)
+    : crypto.scryptSync(String(password), String(salt), 64).toString('hex');
+  const h = Buffer.from(calc);
+  const o = Buffer.from(stored);
   return h.length === o.length && crypto.timingSafeEqual(h, o);
 }
 
@@ -184,7 +200,7 @@ async function initDatabase() {
   // 默认账号
   const admin = await one(`SELECT id FROM users WHERE username = 'admin'`);
   if (!admin) {
-    const { salt, hash } = makeHash('admin123');
+    const { salt, hash } = makeHash(DEFAULT_ADMIN_PASSWORD);
     await run(
       `INSERT INTO users(username, password_hash, salt, role, created_at) VALUES(?,?,?,?,?)`,
       ['admin', hash, salt, 'admin', nowISO()]
@@ -1210,6 +1226,6 @@ server.listen(PORT, HOST, () => {
   console.log(`  访问地址 : http://localhost:${PORT}`);
   console.log(`  监听地址 : ${HOST}${HOST === '127.0.0.1' ? '（仅本机，不触发防火墙提示）' : ''}`);
   console.log(`  数据引擎 : ${TARGET.mode}`);
-  console.log(`  默认账号 : admin / admin123       二级密码 : 888888`);
+  console.log('  账号密码 : 已在数据库中设定（不在此显示）');
   console.log('');
 });

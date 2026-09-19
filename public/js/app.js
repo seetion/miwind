@@ -80,7 +80,7 @@ function openLogin() {
 function closeLogin() {
   $('#loginMask').classList.add('hidden');
   $('#loginTip').className = 'login-tip';
-  $('#loginTip').textContent = '默认账号 admin / 密码 admin123';
+  $('#loginTip').textContent = '登录后可录入与修改数据；游客仅可查看';
 }
 
 async function doLogin() {

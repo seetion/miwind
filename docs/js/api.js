@@ -60,7 +60,18 @@ async function checkGuard() {
    ============================================================ */
 export async function login(username, password) {
   const user = await db.one(`SELECT * FROM users WHERE username = ?`, [str(username).trim()]);
-  if (!user || !(await db.verifyPassword(str(password), user.salt, user.password_hash))) {
+  if (!user) {
+    const e = new Error('账号或密码错误');
+    e.status = 401;
+    throw e;
+  }
+  // 该账号密码由 Node 端（桌面版/云库版）创建，浏览器无法校验，需要重置
+  if (db.isLegacyHash(user.password_hash)) {
+    const e = new Error('该账号的密码由桌面版/云库版创建，网页版无法验证');
+    e.code = 'LEGACY_HASH';
+    throw e;
+  }
+  if (!(await db.verifyPassword(str(password), user.salt, user.password_hash))) {
     const e = new Error('账号或密码错误');
     e.status = 401;
     throw e;
@@ -68,6 +79,33 @@ export async function login(username, password) {
   const info = { id: user.id, username: user.username, role: user.role };
   session.set(info);
   return { token: 'local', user: info };
+}
+
+/**
+ * 重置管理员密码。
+ * 安全起见：只在当前摘要确实是浏览器无法验证的旧格式时才允许执行，
+ * 正常账号（pbkdf2 格式）不会被覆盖。
+ */
+export async function resetAdminPassword(newPassword) {
+  const pwd = str(newPassword);
+  if (pwd.length < 6) throw new Error('新密码至少 6 位');
+  const admin = await db.one(`SELECT id, password_hash FROM users WHERE username = 'admin'`);
+  if (admin && !db.isLegacyHash(admin.password_hash)) {
+    throw new Error('当前管理员密码格式正常，不能直接重置，请使用原密码登录');
+  }
+  const { salt, hash } = await db.makePasswordHash(pwd);
+  if (admin) {
+    await db.run(`UPDATE users SET password_hash=?, salt=? WHERE id=?`, [hash, salt, admin.id]);
+  } else {
+    await db.run(`INSERT INTO users(username, password_hash, salt, role, created_at) VALUES(?,?,?,?,?)`, [
+      'admin',
+      hash,
+      salt,
+      'admin',
+      db.nowISO(),
+    ]);
+  }
+  return { username: 'admin' };
 }
 
 export async function logout() {

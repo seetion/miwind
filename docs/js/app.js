@@ -4,7 +4,7 @@
 
 import * as api from './api.js';
 import { deleteGuard } from './api.js';
-import { $, $$, el, toast, status, loadLocal } from './util.js';
+import { $, $$, el, toast, status, loadLocal, dialog } from './util.js';
 import { applyAppearance, loadProducts, loadSettings, refreshUserUI } from './store.js';
 import { ensureConnected, openDialog } from './config-ui.js';
 import { dbState } from './db.js';
@@ -82,7 +82,7 @@ function openLogin() {
 function closeLogin() {
   $('#loginMask').classList.add('hidden');
   $('#loginTip').className = 'login-tip';
-  $('#loginTip').textContent = '默认账号 admin / 密码 admin123';
+  $('#loginTip').textContent = '登录后可录入与修改数据；游客仅可查看';
 }
 
 async function doLogin() {
@@ -110,8 +110,52 @@ async function doLogin() {
   } catch (e) {
     tip.className = 'login-tip warn';
     tip.textContent = e.message || '登录失败';
+    if (e.code === 'LEGACY_HASH') await offerPasswordReset();
   } finally {
     btn.disabled = false;
+  }
+}
+
+/** 账号密码由 Node 端创建、浏览器无法验证时，提供一次性重置（新密码由使用者自己设定） */
+async function offerPasswordReset() {
+  let pwd = '';
+  const yes = await dialog({
+    title: '密码格式不兼容',
+    width: 'dialog-sm',
+    body:
+      '<div style="line-height:1.9;font-size:12.5px">' +
+      '这个数据库的 <b>admin</b> 账号由桌面版 / 云库版创建，加密方式与网页版不同，浏览器无法验证它的密码。<br/><br/>' +
+      '请为 <b>admin</b> 账号设置一个新密码（至少 6 位）：</div>' +
+      '<div class="field" style="margin-top:10px"><label>新密码</label>' +
+      '<input type="password" id="resetPwd1" autocomplete="new-password" /></div>' +
+      '<div class="field"><label>确认新密码</label>' +
+      '<input type="password" id="resetPwd2" autocomplete="new-password" /></div>' +
+      '<div class="cfg-note">只有在密码格式不兼容时才允许重置，正常账号不会被覆盖。</div>',
+    okText: '重置密码',
+    okType: 'btn-danger',
+    onOk: ({ body }) => {
+      const a = body.querySelector('#resetPwd1').value;
+      const b = body.querySelector('#resetPwd2').value;
+      if (a.length < 6) {
+        toast('新密码至少 6 位', 'warn');
+        return false;
+      }
+      if (a !== b) {
+        toast('两次输入的密码不一致', 'warn');
+        return false;
+      }
+      pwd = a;
+      return true;
+    },
+  });
+  if (!yes || !pwd) return;
+  try {
+    await api.resetAdminPassword(pwd);
+    toast('密码已重置，请用新密码登录', 'success', 5000);
+    $('#loginPass').value = '';
+    $('#loginPass').focus();
+  } catch (err) {
+    toast(err.message || '重置失败', 'error');
   }
 }
 
