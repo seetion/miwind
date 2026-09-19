@@ -117,9 +117,10 @@ export async function render(view) {
           render: (r) => {
             const b = el('button', { class: 'btn-link danger', text: '删除' });
             b.addEventListener('click', async () => {
-              const done = await withDeleteGuard(async () => api.deleteOrder(r.id));
+              const detail = `订单 ${r.order_no}　${r.product_code}　${r.product_name}\n完成数量 ${r.done_qty} / 订单数量 ${r.order_qty}　状态 ${r.status}`;
+              const done = await withDeleteGuard(detail, async () => api.deleteOrder(r.id));
               if (done) {
-                toast('已删除该订单进度记录', 'success');
+                toast(`已删除订单进度：${r.order_no}`, 'success');
                 load();
               }
             });

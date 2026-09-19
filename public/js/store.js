@@ -67,25 +67,47 @@ export function searchProducts(keyword, limit = 40) {
     .slice(0, limit);
 }
 
-/* ---------------- 二级密码 ---------------- */
-export async function askDeletePassword(reason = '该操作会删除数据，请输入二级密码确认') {
+/* ---------------- 二级密码（删除保护） ---------------- */
+/**
+ * 每次删除都必须重新输入二级密码。
+ * 弹窗里会明确写出「要删除什么」，验证通过后的密码只在本次操作期间有效，用完立即清空。
+ */
+export async function askDeletePassword(detail = '') {
   let value = '';
+
+  const box = el('div', {}, [
+    el('div', { class: 'danger-box' }, [
+      el('div', { class: 'danger-title', text: '此操作将永久删除数据，删除后无法恢复' }),
+      detail ? el('div', { class: 'danger-detail', text: detail }) : null,
+      el('div', { class: 'danger-tip', text: '为防止误删，每一次删除都必须重新输入二级密码。' }),
+    ]),
+    el('div', { class: 'field', style: 'margin:0' }, [
+      el('label', { text: '二级密码' }),
+      el('input', { type: 'password', id: 'guardPwd', placeholder: '请输入二级密码', autocomplete: 'off' }),
+    ]),
+  ]);
+
+  const pwdInput = box.querySelector('#guardPwd');
+  pwdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const ok = document.querySelector('#modalRoot .dialog-foot .btn-danger');
+      if (ok) ok.click();
+    }
+  });
+  setTimeout(() => pwdInput.focus(), 80);
+
   const okRes = await dialog({
-    title: '二级密码验证',
+    title: '删除确认',
     width: 'dialog-sm',
-    body: `
-      <div style="line-height:1.7;font-size:12.5px;color:#5b6b82;margin-bottom:10px">${reason}</div>
-      <div class="field" style="margin:0">
-        <label>二级密码</label>
-        <input type="password" id="guardPwd" placeholder="默认 888888" autocomplete="off" />
-      </div>`,
-    okText: '验证并继续',
+    body: box,
+    okText: '确认删除',
     okType: 'btn-danger',
-    onOk: ({ body }) => {
-      const input = body.querySelector('#guardPwd');
-      value = input.value;
+    onOk: () => {
+      value = pwdInput.value.trim();
       if (!value) {
         toast('请输入二级密码', 'warn');
+        pwdInput.focus();
         return false;
       }
       return true;
@@ -96,37 +118,44 @@ export async function askDeletePassword(reason = '该操作会删除数据，请
   try {
     const r = await api.verifyDeletePassword(value);
     if (r && r.valid) {
-      deleteGuard.password = value; // 本次会话内复用
+      deleteGuard.password = value; // 仅供紧接着的这一次操作使用
       return true;
     }
   } catch (e) {
     /* ignore */
   }
-  toast('二级密码错误，操作已取消', 'error');
+  deleteGuard.password = '';
+  toast('二级密码错误，删除已取消', 'error');
   return false;
 }
 
-/** 需要删除权限的操作：无缓存密码则先验证 */
-export async function withDeleteGuard(fn) {
+/**
+ * 需要二级密码的操作（删除记录 / 数据还原）
+ * ——每次都弹窗验证，绝不记忆复用
+ * @param {string} detail 弹窗中展示的删除对象描述
+ * @param {Function} fn 验证通过后执行的操作
+ */
+export async function withDeleteGuard(detail, fn) {
   if (isGuest()) {
-    toast('游客模式无法删除，请先登录', 'warn');
+    toast('游客模式无法执行删除，请先登录', 'warn');
     return false;
   }
-  if (!deleteGuard.password) {
-    const passed = await askDeletePassword();
-    if (!passed) return false;
+  // 兼容只传一个函数的老写法
+  if (typeof detail === 'function' && fn === undefined) {
+    fn = detail;
+    detail = '';
   }
+  const passed = await askDeletePassword(detail);
+  if (!passed) return false;
   try {
     await fn();
     return true;
   } catch (e) {
-    if (e.status === 403) {
-      deleteGuard.password = '';
-      toast('二级密码已失效，请重新验证', 'error');
-    } else {
-      toast(e.message || '操作失败', 'error');
-    }
+    if (e.status === 403) toast('二级密码错误，操作已取消', 'error');
+    else toast(e.message || '操作失败', 'error');
     return false;
+  } finally {
+    deleteGuard.password = ''; // 用完立刻失效，下次删除必须重新输入
   }
 }
 

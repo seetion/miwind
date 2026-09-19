@@ -111,9 +111,10 @@ export async function render(view) {
             bEdit.addEventListener('click', () => openProductEdit(r));
             const bDel = el('button', { class: 'btn-link danger', text: '删除' });
             bDel.addEventListener('click', async () => {
-              const done = await withDeleteGuard(async () => api.deleteProduct(r.id));
+              const detail = `基础物品：${r.code}　${r.name || ''}　${r.spec || ''}　${r.unit || ''}`;
+              const done = await withDeleteGuard(detail, async () => api.deleteProduct(r.id));
               if (done) {
-                toast('已删除', 'success');
+                toast(`已删除基础物品：${r.code}`, 'success');
                 await reloadProducts();
               }
             });
@@ -363,17 +364,17 @@ export async function render(view) {
     } catch (e) {
       return toast('备份文件格式错误（JSON 解析失败）', 'error');
     }
-    const okDel = await withDeleteGuard('数据还原将覆盖现有数据，请输入二级密码确认');
+    const okDel = await withDeleteGuard(
+      `数据还原：将用备份文件覆盖当前全部数据\n备份文件：${f.name}　　导入时间：${new Date().toLocaleString('zh-CN')}`,
+      async () => {
+        await api.restoreBackup(payload);
+        toast('数据还原成功，正在刷新…', 'success');
+        await loadProducts(true);
+        await reloadProducts();
+        setTimeout(() => location.reload(), 900);
+      }
+    );
     if (!okDel) return;
-    try {
-      await api.restoreBackup(payload);
-      toast('数据还原成功，正在刷新…', 'success');
-      await loadProducts(true);
-      await reloadProducts();
-      setTimeout(() => location.reload(), 900);
-    } catch (e) {
-      toast(e.message || '还原失败', 'error');
-    }
   });
 
   dataSection.appendChild(

@@ -76,11 +76,12 @@ export async function render(view) {
   function makeDeleteBtn(row) {
     const b = el('button', { class: 'btn-link danger', text: '删除', title: '删除该条历史记录' });
     b.addEventListener('click', async () => {
-      const done = await withDeleteGuard(async () => {
+      const detail = `${row.report_date}　${row.order_no || '（未填订单号）'}　${row.product_name || ''}　完成数量 ${row.today_qty}`;
+      const done = await withDeleteGuard(detail, async () => {
         await api.deleteHistoryItem(row.item_id);
       });
       if (done) {
-        toast('已删除该条记录', 'success');
+        toast(`已删除：${row.report_date} ${row.product_name || row.order_no || ''}`, 'success');
         load();
       }
     });

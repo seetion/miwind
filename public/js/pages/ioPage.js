@@ -155,9 +155,10 @@ export async function createIOPage(view, kind) {
             bEdit.addEventListener('click', () => openForm(r));
             const bDel = el('button', { class: 'btn-link danger', text: '删除' });
             bDel.addEventListener('click', async () => {
-              const done = await withDeleteGuard(async () => T.remove(r.id));
+              const detail = `${r[T.dateField]}　${r.product_code}　${r.product_name}　${T.qtyLabel} ${r.qty}${r.summary ? '　（' + r.summary + '）' : ''}`;
+              const done = await withDeleteGuard(detail, async () => T.remove(r.id));
               if (done) {
-                toast('已删除该记录', 'success');
+                toast(`已删除${T.title}记录：${r.product_name || r.product_code}`, 'success');
                 load();
               }
             });
